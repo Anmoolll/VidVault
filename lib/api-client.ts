@@ -57,13 +57,20 @@ export async function uploadVideo(file: File): Promise<string> {
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
     
+    // Create a clean filename
+    const timestamp = Date.now();
+    const cleanFileName = file.name.replace(/[^a-zA-Z0-9.]/g, '_').toLowerCase();
+    const fileName = `${timestamp}-${cleanFileName}`;
+
     const response = await imagekit.upload({
       file: buffer,
-      fileName: `${Date.now()}-${file.name}`,
-      folder: "/videos",
+      fileName,
+      folder: "videos",
+      useUniqueFileName: false // Use our custom filename
     });
 
-    return response.filePath;
+    // Return the file path (this will be used as the fileId for deletion)
+    return `videos/${fileName}`;
   } catch (error) {
     console.error("ImageKit upload error:", error);
     throw new Error("Failed to upload video to ImageKit");

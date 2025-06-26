@@ -4,10 +4,18 @@ import { IKVideo } from "imagekitio-react";
 import Link from "next/link";
 import { IVideo } from "@/models/Video";
 import { useEffect, useState } from "react";
+import { Trash2 } from "lucide-react";
+import { useSession } from "next-auth/react";
+import { useNotification } from "./Notification";
+import { useRouter } from "next/navigation";
 
 export default function VideoComponent({ video }: { video: IVideo }) {
   const [isIKConfigured, setIsIKConfigured] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const { data: session } = useSession();
+  const { showNotification } = useNotification();
+  const router = useRouter();
 
   useEffect(() => {
     // Check if ImageKit is properly configured
@@ -19,6 +27,31 @@ export default function VideoComponent({ video }: { video: IVideo }) {
       setError("ImageKit configuration is missing. Please check your environment variables.");
     }
   }, []);
+
+  const handleDelete = async () => {
+    if (!confirm("Are you sure you want to delete this video?")) {
+      return;
+    }
+
+    setIsDeleting(true);
+    try {
+      const response = await fetch(`/api/video/${video._id}`, {
+        method: "DELETE",
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to delete video");
+      }
+
+      showNotification("Video deleted successfully", "success");
+      router.refresh(); // Refresh the page to update the video list
+    } catch (err) {
+      console.error("Error deleting video:", err);
+      showNotification("Failed to delete video", "error");
+    } finally {
+      setIsDeleting(false);
+    }
+  };
 
   if (!isIKConfigured) {
     return (
@@ -68,14 +101,27 @@ export default function VideoComponent({ video }: { video: IVideo }) {
       </figure>
 
       <div className="card-body p-4">
-        <Link
-          href={`/videos/${video._id}`}
-          className="hover:opacity-80 transition-opacity"
-        >
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-            {video.title}
-          </h2>
-        </Link>
+        <div className="flex justify-between items-start">
+          <Link
+            href={`/videos/${video._id}`}
+            className="hover:opacity-80 transition-opacity"
+          >
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+              {video.title}
+            </h2>
+          </Link>
+          
+          {session?.user?.id === video.userId?.toString() && (
+            <button
+              onClick={handleDelete}
+              disabled={isDeleting}
+              className="p-2 text-red-500 hover:text-red-700 disabled:opacity-50 disabled:cursor-not-allowed rounded-full hover:bg-red-50 dark:hover:bg-red-900/20"
+              title="Delete video"
+            >
+              <Trash2 className="w-5 h-5" />
+            </button>
+          )}
+        </div>
 
         <p className="text-sm text-gray-600 dark:text-gray-300 line-clamp-2">
           {video.description}
