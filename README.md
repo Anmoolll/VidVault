@@ -32,7 +32,7 @@ VidVault is a modern video sharing platform built with Next.js 14, featuring a s
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/yourusername/vid-vault.git
+git clone https://github.com/Anmoolll/vid-vault.git
 cd vid-vault
 ```
 
