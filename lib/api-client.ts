@@ -1,4 +1,5 @@
 import { IVideo } from "@/models/Video"
+import ImageKit from "imagekit";
 
 export type VideoFormData = Omit<IVideo, "_id">
 
@@ -43,6 +44,30 @@ class ApiClient {
             body: videoData,
         })
     }
+}
+
+const imagekit = new ImageKit({
+  publicKey: process.env.NEXT_PUBLIC_IMAGEKIT_PUBLIC_KEY || "",
+  privateKey: process.env.IMAGEKIT_PRIVATE_KEY || "",
+  urlEndpoint: process.env.NEXT_PUBLIC_IMAGEKIT_URL_ENDPOINT || "",
+});
+
+export async function uploadVideo(file: File): Promise<string> {
+  try {
+    const bytes = await file.arrayBuffer();
+    const buffer = Buffer.from(bytes);
+    
+    const response = await imagekit.upload({
+      file: buffer,
+      fileName: `${Date.now()}-${file.name}`,
+      folder: "/videos",
+    });
+
+    return response.filePath;
+  } catch (error) {
+    console.error("ImageKit upload error:", error);
+    throw new Error("Failed to upload video to ImageKit");
+  }
 }
 
 export const apiClient = new ApiClient();

@@ -2,15 +2,30 @@
 
 import { createContext, useContext, useState, ReactNode } from "react";
 
-type NotificationType = "success" | "error" | "warning" | "info";
+type NotificationType = "success" | "error" | "info" | "warning";
 
-interface NotificationContextType {
+type NotificationContextType = {
   showNotification: (message: string, type: NotificationType) => void;
-}
+};
 
 const NotificationContext = createContext<NotificationContextType | undefined>(
   undefined
 );
+
+function getAlertClass(type: NotificationType): string {
+  switch (type) {
+    case "success":
+      return "alert-success";
+    case "error":
+      return "alert-error";
+    case "warning":
+      return "alert-warning";
+    case "info":
+      return "alert-info";
+    default:
+      return "alert-info";
+  }
+}
 
 export function NotificationProvider({ children }: { children: ReactNode }) {
   const [notification, setNotification] = useState<{
@@ -31,29 +46,18 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
     <NotificationContext.Provider value={{ showNotification }}>
       {children}
       {notification && (
-        <div className="toast toast-bottom toast-end z-[100]">
-          <div className={`alert ${getAlertClass(notification.type)}`}>
-            <span>{notification.message}</span>
+        <div className="fixed bottom-4 right-4 z-50">
+          <div
+            className={`alert ${getAlertClass(
+              notification.type
+            )} shadow-lg max-w-xs`}
+          >
+            <span className="text-sm">{notification.message}</span>
           </div>
         </div>
       )}
     </NotificationContext.Provider>
   );
-}
-
-function getAlertClass(type: NotificationType): string {
-  switch (type) {
-    case "success":
-      return "alert-success";
-    case "error":
-      return "alert-error";
-    case "warning":
-      return "alert-warning";
-    case "info":
-      return "alert-info";
-    default:
-      return "alert-info";
-  }
 }
 
 export function useNotification() {

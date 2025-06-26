@@ -22,16 +22,16 @@ export const authOptions: NextAuthOptions = {
           const user = await User.findOne({ email: credentials.email });
 
           if (!user) {
-            throw new Error("No user found with this");
+            throw new Error("No user found with this email");
           }
 
           const isValid = await bcrypt.compare(
             credentials.password,
-            user.passsword
+            user.password
           );
 
           if (!isValid) {
-            throw new Error("invalid password");
+            throw new Error("Invalid password");
           }
 
           return {

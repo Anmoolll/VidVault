@@ -1,8 +1,9 @@
 import { authOptions } from "@/lib/auth";
 import { connectToDatabase } from "@/lib/db";
-import Video, { IVideo } from "@/models/Video";
+import { Video } from "@/models/Video";
 import { getServerSession } from "next-auth";
 import { NextRequest, NextResponse } from "next/server";
+import { uploadVideo } from "@/lib/api-client";
 
 export async function GET() {
   try {
@@ -22,43 +23,60 @@ export async function GET() {
   }
 }
 
-export async function POST(request: NextRequest) {
+export async function POST(req: NextRequest) {
   try {
+    // Check authentication
     const session = await getServerSession(authOptions);
     if (!session) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json(
+        { error: "Authentication required" },
+        { status: 401 }
+      );
     }
 
-    await connectToDatabase();
+    // Get form data
+    const formData = await req.formData();
+    const title = formData.get("title") as string;
+    const description = formData.get("description") as string;
+    const videoFile = formData.get("video") as File;
 
-    const body: IVideo = await request.json();
-    if (
-      !body.title ||
-      !body.description ||
-      !body.videoUrl ||
-      !body.thumbnailUrl
-    ) {
+    if (!title || !description || !videoFile) {
       return NextResponse.json(
         { error: "Missing required fields" },
         { status: 400 }
       );
     }
 
-    const videoData = {
-      ...body,
-      controls: body?.controls ?? true,
-      transformation: {
-        height: 1920,
-        width: 1080,
-        quality: body.transformation?.quality ?? 100,
-      },
-    };
-    const newVideo = await Video.create(videoData);
+    // Validate file type
+    if (!videoFile.type.startsWith("video/")) {
+      return NextResponse.json(
+        { error: "Invalid file type. Only video files are allowed." },
+        { status: 400 }
+      );
+    }
 
-    return NextResponse.json(newVideo);
+    // Upload video to ImageKit
+    const videoUrl = await uploadVideo(videoFile);
+
+    // Connect to database
+    await connectToDatabase();
+
+    // Create video record
+    const video = await Video.create({
+      title,
+      description,
+      videoUrl,
+      userId: session.user.id,
+      fileName: videoFile.name,
+      fileSize: videoFile.size,
+      fileType: videoFile.type,
+    });
+
+    return NextResponse.json(video, { status: 201 });
   } catch (error) {
+    console.error("Video upload error:", error);
     return NextResponse.json(
-      { error: "Failed to create video" },
+      { error: "Failed to upload video" },
       { status: 500 }
     );
   }
