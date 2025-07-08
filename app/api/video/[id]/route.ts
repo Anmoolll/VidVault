@@ -5,13 +5,13 @@ import { Video } from "@/models/Video";
 import { connectToDatabase } from "@/lib/db";
 import ImageKit from "imagekit";
 
+// ImageKit init
 const imagekit = new ImageKit({
   publicKey: process.env.NEXT_PUBLIC_IMAGEKIT_PUBLIC_KEY || "",
   privateKey: process.env.IMAGEKIT_PRIVATE_KEY || "",
   urlEndpoint: process.env.NEXT_PUBLIC_IMAGEKIT_URL_ENDPOINT || "",
 });
 
-// Helper function to extract ImageKit file ID from path
 function getImageKitFileId(path: string) {
   const urlEndpoint = process.env.NEXT_PUBLIC_IMAGEKIT_URL_ENDPOINT;
   if (urlEndpoint) {
@@ -20,6 +20,7 @@ function getImageKitFileId(path: string) {
   return path.startsWith("/") ? path.slice(1) : path;
 }
 
+// Route handler
 export async function DELETE(
   request: NextRequest,
   { params }: { params: { id: string } }
