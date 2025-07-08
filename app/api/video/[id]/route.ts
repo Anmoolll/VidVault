@@ -21,8 +21,8 @@ function getImageKitFileId(path: string) {
 }
 
 export async function DELETE(
-  req: NextRequest,
-  context: { params: { id: string } }
+  request: NextRequest,
+  { params }: { params: { id: string } }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -32,8 +32,7 @@ export async function DELETE(
 
     await connectToDatabase();
 
-    const videoId = context.params.id;
-
+    const videoId = params.id;
     const video = await Video.findById(videoId);
     if (!video) {
       return NextResponse.json({ error: "Video not found" }, { status: 404 });
