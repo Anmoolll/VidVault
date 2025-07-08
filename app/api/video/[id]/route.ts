@@ -23,7 +23,7 @@ function getImageKitFileId(path: string) {
 // Route handler
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -33,8 +33,9 @@ export async function DELETE(
 
     await connectToDatabase();
 
-    const videoId = params.id;
-    const video = await Video.findById(videoId);
+    const { id } = await context.params;
+
+    const video = await Video.findById(id);
     if (!video) {
       return NextResponse.json({ error: "Video not found" }, { status: 404 });
     }
@@ -44,7 +45,6 @@ export async function DELETE(
     }
 
     const fileId = getImageKitFileId(video.videoUrl);
-
     if (fileId) {
       try {
         await imagekit.deleteFile(fileId);
@@ -53,7 +53,7 @@ export async function DELETE(
       }
     }
 
-    await Video.findByIdAndDelete(videoId);
+    await Video.findByIdAndDelete(id);
 
     return NextResponse.json({ message: "Video deleted successfully" });
   } catch (error) {
