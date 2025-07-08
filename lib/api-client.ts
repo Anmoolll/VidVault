@@ -3,9 +3,9 @@ import ImageKit from "imagekit";
 
 export type VideoFormData = Omit<IVideo, "_id">
 
-type FetchOptions = {
+type FetchOptions<T = unknown> = {
     method?: "GET" | "POST" | "PUT" | "DELETE"
-    body? : any
+    body? : T;
     headers? : Record<string, string>
 }
 
@@ -62,7 +62,7 @@ export async function uploadVideo(file: File): Promise<string> {
     const cleanFileName = file.name.replace(/[^a-zA-Z0-9.]/g, '_').toLowerCase();
     const fileName = `${timestamp}-${cleanFileName}`;
 
-    const response = await imagekit.upload({
+    await imagekit.upload({
       file: buffer,
       fileName,
       folder: "videos",

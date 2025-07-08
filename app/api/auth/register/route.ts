@@ -1,7 +1,7 @@
 import User from "@/models/User";
 import { NextRequest, NextResponse } from "next/server";
 import { connectToDatabase } from "@/lib/db";
-import bcrypt from "bcryptjs";
+
 
 
 export async function POST(request: NextRequest) {
@@ -43,4 +43,9 @@ export async function POST(request: NextRequest) {
     }
 }
 
-export async function GET(req: NextRequest) {}
+export async function GET() {
+  return NextResponse.json(
+    { error: "GET not supported on this route" },
+    { status: 405 }
+  );
+}
